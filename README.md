@@ -1,12 +1,15 @@
 ### Hi there 👋
+I'am pineapple!
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=33&duration=1000&color=F7A411&multiline=true&repeat=false&width=1800&height=370&lines=I+am+a+sophomore+student+currently+studying+artificial+intelligence.+;I+am+also+learning+about+web+development+and+software+development.;%E7%A7%81%E3%81%AF2%E5%B9%B4%E7%94%9F%E3%81%AE%E5%AD%A6%E7%94%9F%E3%81%A7%E3%80%81%E7%8F%BE%E5%9C%A8%E4%BA%BA%E5%B7%A5%E7%9F%A5%E8%83%BD%E3%82%92%E5%AD%A6%E3%82%93%E3%81%A7%E3%81%84%E3%81%BE%E3%81%99%E3%80%82;%E5%90%8C%E6%99%82%E3%81%AB%E3%80%81%E3%82%A6%E3%82%A7%E3%83%96%E9%96%8B%E7%99%BA%E3%81%A8%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA%E3%81%AB%E3%82%82%E9%96%A2%E5%BF%83%E3%81%8C%E3%81%82%E3%82%8A%E3%81%BE%E3%81%99%E3%80%82;%E6%88%91%E6%98%AF%E4%B8%AA%E5%A4%A7%E4%BA%8C%E5%AD%A6%E7%94%9F%E6%AD%A3%E5%9C%A8%E5%AD%A6%E4%B9%A0%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD;%E5%90%8C%E6%97%B6%E5%AF%B9%E7%BD%91%E9%A1%B5%E5%BC%80%E5%8F%91%E5%92%8C%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91%E4%B9%9F%E6%9C%89%E7%9B%B8%E5%85%B3%E5%AD%A6%E4%B9%A0.;Please+feel+free+to+give+me+guidance+and+advice;%E3%81%A9%E3%81%86%E3%81%9E%E3%82%88%E3%82%8D%E3%81%97%E3%81%8F%E3%81%8A%E9%A1%98%E3%81%84%E3%81%97%E3%81%BE%E3%81%99%E3%80%82;%E5%B8%8C%E6%9C%9B%E5%A4%A7%E5%AE%B6%E5%A4%9A%E5%A4%9A%E6%8C%87%E6%95%99%EF%BC%8C%E8%B0%A2%E8%B0%A2)](https://git.io/typing-svg)
+
 
 <!--
 **Bigpineapple1024/Bigpineapple1024** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
 Here are some ideas to get you started:
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
+- 🔭 I’m currently working on save the world!
+- 🌱 I’m currently learning 
 - 👯 I’m looking to collaborate on ...
 - 🤔 I’m looking for help with ...
 - 💬 Ask me about ...
