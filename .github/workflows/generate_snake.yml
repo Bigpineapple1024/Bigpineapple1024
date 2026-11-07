@@ -9,7 +9,7 @@ on:
     branches: [main]
     paths:
       - hero.config.json
-      - scripts/build_hero.ps1
+      - scripts/**
       - .github/workflows/generate_snake.yml
   workflow_dispatch:
 
@@ -26,7 +26,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Build hero
-        run: pwsh -NoProfile -File scripts/build_hero.ps1
+        run: |
+          pwsh -NoProfile -File scripts/build_hero.ps1 -Theme dark -Out dist/hero.svg
+          pwsh -NoProfile -File scripts/build_hero.ps1 -Theme light -Out dist/hero-light.svg
 
       - name: Generate snake animations
         uses: Platane/snk/svg-only@v3
