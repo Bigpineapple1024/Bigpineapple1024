@@ -1,1 +1,12 @@
-[object Object]
+// 改这里的文字并提交，头图会自动重新生成。phrases 固定三句，轮流显示。
+{
+  "title": "1 pineapple in the last year",
+  "footnote": "Learn how we count pineapples",
+  "phrases": [
+    "你好，我是 Pineapple",
+    "Hello, I'm Pineapple.",
+    "こんにちは、パイナップルです"
+  ],
+  "tagline": "一颗写代码的菠萝 · AI × Web × Software",
+  "chips": ["Python", "Jupyter", "HTML", "SQL", "Git"]
+}
