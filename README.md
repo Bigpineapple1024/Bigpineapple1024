@@ -6,12 +6,13 @@
 
 <div align="center">
 
-**一颗写代码的菠萝 🍍**
+**一颗在读修士的菠萝 🍍**
 
-主线是人工智能，也在折腾 Web 和软件开发。<br />
-有好点子或者好建议，欢迎来指路。
+研究多模态理解，让模型把图像和文字一起看懂，而且看得更省。<br />
+最近在做视觉语言模型的 token 剪枝。<br />
+欢迎交流，也欢迎来指路。
 
-*Pineapple here. Mostly AI, with some web and software on the side. Advice is always welcome.*
+*Master's student working on multimodal understanding, lately on token pruning for vision-language models.*
 
 </div>
 
