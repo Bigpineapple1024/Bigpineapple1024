@@ -1,12 +1,15 @@
-# Generates dist/hero.svg: a contribution wall where a snake writes PINEAPPLE.
+# Generates the hero image: a contribution wall where a snake writes PINEAPPLE.
 # All text lives in hero.config.json so this file stays ASCII (PowerShell 5.1 reads BOM-less .ps1 as ANSI).
 param(
+  [ValidateSet('dark', 'light')][string]$Theme = 'dark',
   [string]$Config = (Join-Path $PSScriptRoot '../hero.config.json'),
   [string]$Out = (Join-Path $PSScriptRoot '../dist/hero.svg')
 )
 $ErrorActionPreference = 'Stop'
 [Threading.Thread]::CurrentThread.CurrentCulture = [Globalization.CultureInfo]::InvariantCulture
-$cfg = Get-Content -Raw -Encoding UTF8 $Config | ConvertFrom-Json
+. (Join-Path $PSScriptRoot 'common.ps1')
+$TH = Get-Theme $Theme
+$cfg = Read-Config $Config
 
 # Layout. 53 columns x 7 rows is the real calendar; PINEAPPLE in a 5x7 font is 51 columns wide.
 $CARD_W = 1000; $CARD_H = 382
@@ -16,13 +19,8 @@ $COLS = 53; $ROWS = 7
 # Timeline (seconds). Pass 1 writes the name, pass 2 eats it.
 $LOOP = 18.0; $PASS = 5.0; $EAT_AT = 12.0
 $PHRASE_STARTS = 0.3, 6.3, 12.3
-$PHRASE_LEN = 5.4
+$PHRASE_LEN = 5.7
 $TYPE_DT = 0.085
-
-$GOLD = '#ffd23f'
-$LEVELS = '#d99a00', '#f2b705', '#ffd23f', '#ffe98a'
-$MONO = "ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',monospace"
-$SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif"
 
 $FONT = @{
   'P' = '11110', '10001', '10001', '11110', '10000', '10000', '10000'
@@ -77,16 +75,17 @@ for ($i = 0; $i -lt $path.Count; $i++) {
 $sb = New-Object System.Text.StringBuilder
 function A([string]$s) { [void]$sb.Append($s) }
 
+$helloAll = ($cfg.intro | ForEach-Object { $_.hello }) -join ' / '
 A ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + $CARD_W + ' ' + $CARD_H + '" width="' + $CARD_W + '" height="' + $CARD_H + '" role="img" aria-labelledby="t d">')
 A '<title id="t">Pineapple</title>'
-A ('<desc id="d">' + (Esc ($cfg.phrases -join ' / ')) + '</desc>')
+A ('<desc id="d">' + (Esc $helloAll) + '</desc>')
 
 # Styles
 A '<style>'
-A ('text{font-family:' + $MONO + '}.sans{font-family:' + $SANS + '}')
-A '.ttl{font-size:15px;font-weight:600;fill:#e6edf3}.m{font-size:12px;fill:#7d8590}'
-A '.lead{font-size:32px;font-weight:700;fill:#f0f6fc}.gt{font-size:32px;font-weight:700}'
-A '.tag{font-size:17px;fill:#9198a1}.chip{font-size:13px;fill:#c9d1d9}'
+A ('text{font-family:' + $TH.Mono + '}.sans{font-family:' + $TH.Sans + '}')
+A ('.ttl{font-size:15px;font-weight:600;fill:' + $TH.Title + '}.m{font-size:12px;fill:' + $TH.Muted + '}')
+A ('.lead{font-size:32px;font-weight:700;fill:' + $TH.Lead + '}.gt{font-size:32px;font-weight:700}')
+A ('.tag{font-size:19px;fill:' + $TH.Tag + '}.chip{font-size:14px;fill:' + $TH.ChipText + '}')
 A ('.l{transform-box:fill-box;transform-origin:center;animation:lit ' + (N $LOOP) + 's linear infinite both}')
 $eatPct = $EAT_AT / $LOOP * 100
 A ('@keyframes lit{0%{opacity:0;transform:scale(.4)}1%{opacity:1;transform:scale(1.4)}3%{opacity:1;transform:scale(1)}' + (N $eatPct) + '%{opacity:1;transform:scale(1)}' + (N ($eatPct + 0.4)) + '%{opacity:0;transform:scale(.4)}100%{opacity:0;transform:scale(.4)}}')
@@ -123,15 +122,15 @@ A '</style>'
 
 # Defs
 A '<defs>'
-A ('<pattern id="p" x="' + $X0 + '" y="' + $Y0 + '" width="' + $PITCH + '" height="' + $PITCH + '" patternUnits="userSpaceOnUse"><rect width="' + $CELL + '" height="' + $CELL + '" rx="3" fill="#161b22"/></pattern>')
-A '<radialGradient id="ga" cx=".12" cy=".05" r=".8"><stop offset="0" stop-color="#ffd23f" stop-opacity=".13"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>'
-A '<radialGradient id="gb" cx=".95" cy="1" r=".7"><stop offset="0" stop-color="#3fb950" stop-opacity=".14"/><stop offset="1" stop-color="#3fb950" stop-opacity="0"/></radialGradient>'
-A ('<filter id="glow" filterUnits="userSpaceOnUse" x="0" y="40" width="' + $CARD_W + '" height="170"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feComponentTransfer in="b" result="g"><feFuncA type="linear" slope=".8"/></feComponentTransfer><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>')
+A ('<pattern id="p" x="' + $X0 + '" y="' + $Y0 + '" width="' + $PITCH + '" height="' + $PITCH + '" patternUnits="userSpaceOnUse"><rect width="' + $CELL + '" height="' + $CELL + '" rx="3" fill="' + $TH.Empty + '"/></pattern>')
+A ('<radialGradient id="ga" cx=".12" cy=".05" r=".8"><stop offset="0" stop-color="#ffd23f" stop-opacity="' + $TH.GlowGold + '"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>')
+A ('<radialGradient id="gb" cx=".95" cy="1" r=".7"><stop offset="0" stop-color="#3fb950" stop-opacity="' + $TH.GlowGreen + '"/><stop offset="1" stop-color="#3fb950" stop-opacity="0"/></radialGradient>')
+A ('<filter id="glow" filterUnits="userSpaceOnUse" x="0" y="40" width="' + $CARD_W + '" height="170"><feGaussianBlur in="SourceGraphic" stdDeviation="6" result="b"/><feComponentTransfer in="b" result="g"><feFuncA type="linear" slope="' + $TH.GlowSlope + '"/></feComponentTransfer><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>')
 A ('<clipPath id="wall"><rect x="' + ($X0 - 2) + '" y="' + ($Y0 - 2) + '" width="' + ($COLS * $PITCH) + '" height="' + ($ROWS * $PITCH) + '"/></clipPath>')
 A '</defs>'
 
 # Card
-A ('<rect x=".5" y=".5" width="' + ($CARD_W - 1) + '" height="' + ($CARD_H - 1) + '" rx="14" fill="#0d1117" stroke="#30363d"/>')
+A ('<rect x=".5" y=".5" width="' + ($CARD_W - 1) + '" height="' + ($CARD_H - 1) + '" rx="14" fill="' + $TH.Card + '" stroke="' + $TH.Stroke + '"/>')
 A ('<rect x="1" y="1" width="' + ($CARD_W - 2) + '" height="' + ($CARD_H - 2) + '" rx="14" fill="url(#ga)"/>')
 A ('<rect x="1" y="1" width="' + ($CARD_W - 2) + '" height="' + ($CARD_H - 2) + '" rx="14" fill="url(#gb)"/>')
 
@@ -150,7 +149,7 @@ for ($c = 0; $c -lt $COLS; $c++) {
     if ($occupied.ContainsKey("$c,$r")) { continue }
     $h = ($c * 31 + $r * 17 + $c * $r * 7) % 13
     if ($h -eq 0 -or $h -eq 5) {
-      $fill = if ($h -eq 0) { '#0e4429' } else { '#0b3320' }
+      $fill = if ($h -eq 0) { $TH.Scatter1 } else { $TH.Scatter2 }
       A ('<rect x="' + ($X0 + $c * $PITCH) + '" y="' + ($Y0 + $r * $PITCH) + '" width="' + $CELL + '" height="' + $CELL + '" rx="3" fill="' + $fill + '"/>')
     }
   }
@@ -160,14 +159,14 @@ for ($c = 0; $c -lt $COLS; $c++) {
 A '<g filter="url(#glow)">'
 foreach ($pt in $lit) {
   $c = $pt[0]; $r = $pt[1]
-  $fill = $LEVELS[($c * 7 + $r * 13) % 4]
+  $fill = $TH.Levels[($c * 7 + $r * 13) % 4]
   A ('<rect class="l" x="' + ($X0 + $c * $PITCH) + '" y="' + ($Y0 + $r * $PITCH) + '" width="' + $CELL + '" height="' + $CELL + '" rx="3" fill="' + $fill + '" style="animation-delay:' + (N $arrive[$c]) + 's"/>')
 }
 A '</g>'
 
 # Snake
 A '<g class="snake" clip-path="url(#wall)">'
-$seg = '#7ee787', '#56d364', '#3fb950', '#2ea043', '#238636', '#1a7f37', '#116329'
+$seg = $TH.Snake
 for ($k = $seg.Count - 1; $k -ge 0; $k--) {
   A ('<rect class="s" width="' + $CELL + '" height="' + $CELL + '" rx="3" fill="' + $seg[$k] + '" style="animation-delay:' + (N ($k * $dt)) + 's"/>')
 }
@@ -176,17 +175,18 @@ A '</g>'
 # Legend row
 A ('<text class="m" x="' + $X0 + '" y="214">' + (Esc $cfg.footnote) + '</text>')
 A '<text class="m" x="975" y="214" text-anchor="end">Sweet</text>'
-$legend = '#161b22', '#d99a00', '#f2b705', '#ffd23f', '#ffe98a'
+$legend = @($TH.Empty) + $TH.Levels
 for ($i = 0; $i -lt 5; $i++) {
   A ('<rect x="' + (870 + $i * 14) + '" y="204" width="11" height="11" rx="2" fill="' + $legend[$i] + '"/>')
 }
 A '<text class="m" x="862" y="214" text-anchor="end">Sour</text>'
 
-# Typing lines. Every glyph gets an explicit x, so CJK/Latin mixing and font fallback cannot shift the cursor.
+# Greeting and tagline rotate together, one language at a time.
+# Every glyph gets an explicit x, so CJK/Latin mixing and font fallback cannot shift the cursor.
 $fs = 32.0; $tx = 58; $ty = 272
-A ('<text class="gt" x="' + $X0 + '" y="' + $ty + '" fill="' + $GOLD + '">&gt;</text>')
+A ('<text class="gt" x="' + $X0 + '" y="' + $ty + '" fill="' + $TH.Gold + '">&gt;</text>')
 for ($p = 0; $p -lt 3; $p++) {
-  $phrase = [string]$cfg.phrases[$p]
+  $phrase = [string]$cfg.intro[$p].hello
   $x = [double]$tx
   $start = $PHRASE_STARTS[$p]
   A ('<g class="ph' + ($p + 1) + '">')
@@ -206,17 +206,16 @@ for ($p = 0; $p -lt 3; $p++) {
   [void]$kf.Append((N ($endT / $LOOP * 100)) + '%{transform:translateX(' + (N ($x + 4)) + 'px)}')
   $name = 'cur' + ($p + 1)
   A ('<style>.' + $name + '{animation:' + $name + ' ' + (N $LOOP) + 's steps(1,end) infinite both}@keyframes ' + $name + '{0%{transform:translateX(' + $tx + 'px)}' + $kf.ToString() + '}</style>')
-  A ('<g class="cur blink"><rect class="' + $name + '" y="' + ($ty - 27) + '" width="15" height="33" fill="' + $GOLD + '"/></g>')
+  A ('<g class="cur blink"><rect class="' + $name + '" y="' + ($ty - 27) + '" width="15" height="33" fill="' + $TH.Gold + '"/></g>')
+  A ('<text class="tag sans" x="' + $X0 + '" y="312">' + (Esc ([string]$cfg.intro[$p].tagline)) + '</text>')
   A '</g>'
 }
-
-A ('<text class="tag sans" x="' + $X0 + '" y="310">' + (Esc $cfg.tagline) + '</text>')
 
 # Chips
 $cx = $X0
 foreach ($chip in $cfg.chips) {
-  $w = [Math]::Round($chip.Length * 7.8 + 22)
-  A ('<rect x="' + $cx + '" y="328" width="' + $w + '" height="28" rx="14" fill="#161b22" stroke="#30363d"/>')
+  $w = [Math]::Round($chip.Length * 8.4 + 24)
+  A ('<rect x="' + $cx + '" y="328" width="' + $w + '" height="28" rx="14" fill="' + $TH.ChipFill + '" stroke="' + $TH.Stroke + '"/>')
   A ('<text class="chip" x="' + ($cx + $w / 2) + '" y="347" text-anchor="middle">' + (Esc $chip) + '</text>')
   $cx += $w + 10
 }
@@ -238,19 +237,16 @@ $art = @(
   '..YDYYYDY..',
   '...YYYYY...'
 )
-$colors = @{ 'G' = '#3fb950'; 'L' = '#7ee787'; 'Y' = '#ffd23f'; 'D' = '#d99a00' }
 A '<g class="bob">'
 for ($r = 0; $r -lt $art.Count; $r++) {
   for ($c = 0; $c -lt $art[$r].Length; $c++) {
     $k = [string]$art[$r][$c]
     if ($k -eq '.') { continue }
-    A ('<rect x="' + (898 + $c * 7) + '" y="' + (250 + $r * 7) + '" width="6" height="6" rx="1" fill="' + $colors[$k] + '"/>')
+    A ('<rect x="' + (898 + $c * 7) + '" y="' + (250 + $r * 7) + '" width="6" height="6" rx="1" fill="' + $TH.Art[$k] + '"/>')
   }
 }
 A '</g>'
 
 A '</svg>'
 
-New-Item -ItemType Directory -Force (Split-Path $Out) | Out-Null
-[IO.File]::WriteAllText($Out, $sb.ToString(), (New-Object Text.UTF8Encoding $false))
-"wrote $Out ($((Get-Item $Out).Length) bytes)"
+Save-Svg $Out $sb.ToString()
