@@ -12,8 +12,20 @@
 </picture>
 </p>
 <picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/focus.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/focus-light.svg" />
+  <img src="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/focus.svg" width="100%" alt="研究テーマ：視覚トークン削減。Research focus: visual token pruning for VLMs. 研究方向：视觉 token 剪枝。" />
+</picture>
+<p>
+<picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/github-snake-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/github-snake.svg" />
   <img src="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/github-snake.svg" alt="贪吃蛇吃掉 GitHub 贡献图上的格子" />
+</picture>
+</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/stats.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/stats-light.svg" />
+  <img src="https://raw.githubusercontent.com/Bigpineapple1024/Bigpineapple1024/output/stats.svg" width="100%" alt="この1年の数字。Past year in numbers. 过去一年的数据。" />
 </picture>
 </div>
