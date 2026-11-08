@@ -3,18 +3,18 @@
   "title": "1 pineapple in the last year",
   "footnote": "Learn how we count pineapples",
   "intro": [
-    { "hello": "你好，我是 Pineapple", "tagline": "修士在读 · 多模态理解 × 视觉语言模型" },
     { "hello": "こんにちは、パイナップルです", "tagline": "修士課程 · マルチモーダル理解 × 視覚言語モデル" },
-    { "hello": "Hello, I'm Pineapple.", "tagline": "Master's student · Multimodal understanding × VLMs" }
+    { "hello": "Hello, I'm Pineapple.", "tagline": "Master's student · Multimodal understanding × VLMs" },
+    { "hello": "你好，我是 Pineapple", "tagline": "修士在读 · 多模态理解 × 视觉语言模型" }
   ],
   "chips": ["Multimodal", "VLM", "Token Pruning", "Python", "PyTorch"],
   "about": {
     "prompt": "pineapple:~$",
     "command": "cat about.txt",
     "lines": [
-      { "tag": "zh", "text": "修士在读，研究多模态理解与 token 剪枝。", "em": ["多模态理解", "token 剪枝"] },
       { "tag": "ja", "text": "修士課程在籍。マルチモーダル理解とトークン削減を研究中。", "em": ["マルチモーダル理解", "トークン削減"] },
-      { "tag": "en", "text": "Master's student researching multimodal AI and token pruning.", "em": ["multimodal AI", "token pruning"] }
+      { "tag": "en", "text": "Master's student researching multimodal AI and token pruning.", "em": ["multimodal AI", "token pruning"] },
+      { "tag": "zh", "text": "修士在读，研究多模态理解与 token 剪枝。", "em": ["多模态理解", "token 剪枝"] }
     ]
   }
 }
