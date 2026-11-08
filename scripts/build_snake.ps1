@@ -13,7 +13,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'common.ps1')
 
 # Layout in SVG units. The root width/height draw it at $SCALE times this size.
-$PITCH = 16; $DOT = 12; $ROWS = 7; $SCALE = 2
+$PITCH = 16; $DOT = 12; $ROWS = 7; $SCALE = 1.5
 $TOP = 22; $BAR_GAP = 12; $BAR_H = 6; $BOTTOM = 14
 # Timeline in seconds.
 $STEP = 0.12; $START_HOLD = 0.6; $END_HOLD = 2.0
