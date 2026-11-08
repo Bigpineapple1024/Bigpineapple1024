@@ -1,4 +1,4 @@
-// 改这里的文字并提交，头图和简介会自动重新生成。intro 固定三组，按顺序轮流显示；about 是头图下面的终端简介，em 里的词会发金光。
+// 改这里的文字并提交，主页图片会自动重新生成。intro 固定三组，按顺序轮流显示；about 是终端简介，em 里的词会发金光；focus 是研究方向动画；stats 是数据面板的标签（日、英、中轮换）。
 {
   "title": "1 pineapple in the last year",
   "footnote": "Learn how we count pineapples",
@@ -15,6 +15,29 @@
       { "tag": "ja", "text": "修士課程在籍。マルチモーダル理解とトークン削減を研究中。", "em": ["マルチモーダル理解", "トークン削減"] },
       { "tag": "en", "text": "Master's student researching multimodal AI and token pruning.", "em": ["multimodal AI", "token pruning"] },
       { "tag": "zh", "text": "修士在读，研究多模态理解与 token 剪枝。", "em": ["多模态理解", "token 剪枝"] }
+    ]
+  },
+  "focus": {
+    "title": "研究テーマ · Research focus · 研究方向",
+    "note": "// visual token pruning",
+    "output": "\"a pineapple\"",
+    "captions": [
+      "必要な視覚トークンだけを残し、VLM をより軽く、より速く。",
+      "Keep only the visual tokens that matter: lighter, faster VLMs.",
+      "只保留关键的视觉 token，让 VLM 更轻、更快。"
+    ]
+  },
+  "stats": {
+    "labels": [
+      ["この1年のコントリビューション", "contributions, past year", "过去一年的贡献"],
+      ["1日の最多記録", "best single day", "单日最高"],
+      ["活動日あたりの平均", "avg per active day", "活跃日平均"],
+      ["いちばん多い曜日", "busiest weekday", "最活跃的星期"]
+    ],
+    "weekdays": [
+      ["日曜", "月曜", "火曜", "水曜", "木曜", "金曜", "土曜"],
+      ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
     ]
   }
 }
