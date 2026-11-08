@@ -1,4 +1,4 @@
-# Rebuilds the hero and the contribution snake, then publishes both to the `output` branch.
+# Rebuilds the hero, the intro and the contribution snake, then publishes them to the `output` branch.
 name: Generate Snake
 
 on:
@@ -29,6 +29,11 @@ jobs:
         run: |
           pwsh -NoProfile -File scripts/build_hero.ps1 -Theme dark -Out dist/hero.svg
           pwsh -NoProfile -File scripts/build_hero.ps1 -Theme light -Out dist/hero-light.svg
+
+      - name: Build intro
+        run: |
+          pwsh -NoProfile -File scripts/build_intro.ps1 -Theme dark -Out dist/intro.svg
+          pwsh -NoProfile -File scripts/build_intro.ps1 -Theme light -Out dist/intro-light.svg
 
       # Our own generator instead of Platane/snk, which always draws the whole year.
       - name: Build snake (last 13 weeks)
