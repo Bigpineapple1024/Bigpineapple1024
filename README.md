@@ -6,7 +6,7 @@
 </picture>
 <p>
 修士在读，研究多模态理解与 token 剪枝。<br />
-修士課程で、マルチモーダル理解とトークン枝刈りを研究中。<br />
+修士課程在籍。マルチモーダル理解とトークン削減を研究中。<br />
 Master's student researching multimodal AI and token pruning.
 </p>
 <picture>
