@@ -103,7 +103,9 @@ A ('<desc id="d">' + (Esc $all) + '</desc>')
 A '<style>'
 A ('text{font-family:' + $TH.Mono + ';font-size:' + $FS + 'px;fill:' + $TH.Title + '}')
 A ('.tag{font-size:11px;fill:' + $TH.Muted + '}.em{fill:' + $TH.Gold + ';font-weight:700}')
-A '.c{animation:in .01s steps(1,end) both}@keyframes in{from{opacity:0}to{opacity:1}}'
+# One-shot animations stall partway when the SVG is shown as an <img> in Chrome, so each glyph
+# runs a 10-minute infinite cycle instead: hidden until its delay, then shown for the rest of the cycle.
+A '.c{animation:in 600s steps(1,end) infinite both}@keyframes in{0%{opacity:0}.001%,100%{opacity:1}}'
 A ('.cur{animation:cur ' + (N $TOTAL) + 's steps(1,end) 1 both}')
 A '@keyframes cur{'
 foreach ($s in $stops) {
