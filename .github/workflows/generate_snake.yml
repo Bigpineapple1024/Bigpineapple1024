@@ -30,13 +30,9 @@ jobs:
           pwsh -NoProfile -File scripts/build_hero.ps1 -Theme dark -Out dist/hero.svg
           pwsh -NoProfile -File scripts/build_hero.ps1 -Theme light -Out dist/hero-light.svg
 
-      - name: Generate snake animations
-        uses: Platane/snk/svg-only@v3
-        with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            dist/github-snake.svg?color_snake=#d99a00
-            dist/github-snake-dark.svg?palette=github-dark&color_snake=#ffd23f
+      # Our own generator instead of Platane/snk, which always draws the whole year.
+      - name: Build snake (last 13 weeks)
+        run: pwsh -NoProfile -File scripts/build_snake.ps1 -Weeks 13 -Out dist/github-snake.svg -DarkOut dist/github-snake-dark.svg
 
       - name: Publish to the output branch
         uses: crazy-max/ghaction-github-pages@v5
