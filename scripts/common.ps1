@@ -38,6 +38,33 @@ function Read-Config([string]$Path) {
   return ($json | ConvertFrom-Json)
 }
 
+function Get-Contributions([string]$User, [string]$Html = '') {
+  # Reads the public contributions page (the same source Platane/snk uses), or a saved copy of it.
+  # Levels: date -> 0..4 for every day shown. Counts: date -> contributions, from the cell tooltips;
+  # Counts comes back empty if GitHub changes that markup, so callers must cope without it.
+  if ($Html) {
+    $page = Get-Content -Raw -Encoding UTF8 $Html
+  } else {
+    $page = (Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/users/$User/contributions" -Headers @{ 'User-Agent' = 'profile-snake' }).Content
+  }
+  $levels = @{}
+  foreach ($m in [regex]::Matches($page, 'data-date="(\d{4}-\d{2}-\d{2})"[^>]*?data-level="(\d)"')) {
+    $levels[$m.Groups[1].Value] = [int]$m.Groups[2].Value
+  }
+  if ($levels.Count -lt 7) { throw "Found only $($levels.Count) days on the contributions page; its markup may have changed." }
+  $counts = @{}
+  $dateOfId = @{}
+  foreach ($m in [regex]::Matches($page, '<td[^>]*>')) {
+    $d = [regex]::Match($m.Value, 'data-date="([^"]+)"'); $id = [regex]::Match($m.Value, '\bid="([^"]+)"')
+    if ($d.Success -and $id.Success) { $dateOfId[$id.Groups[1].Value] = $d.Groups[1].Value }
+  }
+  foreach ($m in [regex]::Matches($page, '<tool-tip[^>]*\bfor="([^"]+)"[^>]*>\s*(\d+) contributions? on')) {
+    $id = $m.Groups[1].Value
+    if ($dateOfId.ContainsKey($id)) { $counts[$dateOfId[$id]] = [int]$m.Groups[2].Value }
+  }
+  return @{ Levels = $levels; Counts = $counts }
+}
+
 function Save-Svg([string]$Path, [string]$Svg) {
   $full = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
   New-Item -ItemType Directory -Force (Split-Path $full) | Out-Null
