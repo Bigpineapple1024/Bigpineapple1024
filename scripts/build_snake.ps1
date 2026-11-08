@@ -35,29 +35,10 @@ $PALETTES = @{
 
 function N([double]$v) { return ('{0:0.###}' -f $v) }
 
-# ---- Contribution data
-if ($Html) {
-  $page = Get-Content -Raw -Encoding UTF8 $Html
-} else {
-  $page = (Invoke-WebRequest -UseBasicParsing -Uri "https://github.com/users/$User/contributions" -Headers @{ 'User-Agent' = 'profile-snake' }).Content
-}
-$days = @{}
-foreach ($m in [regex]::Matches($page, 'data-date="(\d{4}-\d{2}-\d{2})"[^>]*?data-level="(\d)"')) {
-  $days[$m.Groups[1].Value] = [int]$m.Groups[2].Value
-}
-if ($days.Count -lt 7) { throw "Found only $($days.Count) days on the contributions page; its markup may have changed." }
-
-# Per-day counts live in tooltips tied to each cell's id. Optional: without them the bar slices are equal.
-$counts = @{}
-$dateOfId = @{}
-foreach ($m in [regex]::Matches($page, '<td[^>]*>')) {
-  $d = [regex]::Match($m.Value, 'data-date="([^"]+)"'); $id = [regex]::Match($m.Value, '\bid="([^"]+)"')
-  if ($d.Success -and $id.Success) { $dateOfId[$id.Groups[1].Value] = $d.Groups[1].Value }
-}
-foreach ($m in [regex]::Matches($page, '<tool-tip[^>]*\bfor="([^"]+)"[^>]*>\s*(\d+) contributions? on')) {
-  $id = $m.Groups[1].Value
-  if ($dateOfId.ContainsKey($id)) { $counts[$dateOfId[$id]] = [int]$m.Groups[2].Value }
-}
+# ---- Contribution data. Without per-day counts the bar slices are equal and no "+N" is shown.
+$data = Get-Contributions $User $Html
+$days = $data.Levels
+$counts = $data.Counts
 
 $inv = [Globalization.CultureInfo]::InvariantCulture
 $lastKey = $days.Keys | Sort-Object | Select-Object -Last 1
