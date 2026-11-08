@@ -1,4 +1,4 @@
-# Rebuilds the hero, the intro and the contribution snake, then publishes them to the `output` branch.
+# Rebuilds the hero, intro, research card, contribution snake and stats, then publishes them to the `output` branch.
 name: Generate Snake
 
 on:
@@ -35,9 +35,17 @@ jobs:
           pwsh -NoProfile -File scripts/build_intro.ps1 -Theme dark -Out dist/intro.svg
           pwsh -NoProfile -File scripts/build_intro.ps1 -Theme light -Out dist/intro-light.svg
 
+      - name: Build research card
+        run: |
+          pwsh -NoProfile -File scripts/build_focus.ps1 -Theme dark -Out dist/focus.svg
+          pwsh -NoProfile -File scripts/build_focus.ps1 -Theme light -Out dist/focus-light.svg
+
       # Our own generator instead of Platane/snk, which always draws the whole year.
       - name: Build snake (last 13 weeks)
         run: pwsh -NoProfile -File scripts/build_snake.ps1 -Weeks 13 -Out dist/github-snake.svg -DarkOut dist/github-snake-dark.svg
+
+      - name: Build stats
+        run: pwsh -NoProfile -File scripts/build_stats.ps1 -Out dist/stats.svg -LightOut dist/stats-light.svg
 
       - name: Publish to the output branch
         uses: crazy-max/ghaction-github-pages@v5
