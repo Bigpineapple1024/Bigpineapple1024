@@ -1,11 +1,12 @@
 # Generates the contribution snake for the last few months, in light and dark versions.
 # Data comes from the public contributions page, the same source Platane/snk reads,
 # so private contributions show up exactly as they do on the profile.
-# The snake walks the weeks in date order, grows one segment per active day it eats,
+# The snake wanders on a route that changes every day, grows one segment per active day it eats,
 # shows "+N" for that day's contributions, and fills a bar weighted by contribution count.
 param(
   [string]$User = $(if ($env:GITHUB_REPOSITORY_OWNER) { $env:GITHUB_REPOSITORY_OWNER } else { 'Bigpineapple1024' }),
   [int]$Weeks = 13,
+  [int]$Seed = 0,   # 0 = use the date of the newest day, so each daily build gets a new route
   [string]$Html = '',
   [string]$Out = (Join-Path $PSScriptRoot '../dist/github-snake.svg'),
   [string]$DarkOut = (Join-Path $PSScriptRoot '../dist/github-snake-dark.svg')
@@ -19,8 +20,13 @@ $PITCH = 16; $DOT = 12; $ROWS = 7; $SCALE = 1.5
 $TOP = 22; $BAR_GAP = 12; $BAR_H = 6; $BOTTOM = 14
 # Timeline in seconds.
 $STEP = 0.1; $START_HOLD = 0.6; $END_HOLD = 2.0; $POP = 0.9
-# The snake starts with this many segments and gains one per active day.
-$START_LEN = 4
+# The snake starts with this many segments and grows as it eats, one per active day,
+# spread out evenly once there are more active days than it has room to grow.
+$START_LEN = 4; $MAX_LEN = 18
+# Long routes walk faster so a loop stays under about this many seconds of walking.
+$MAX_WALK = 24
+# Random walk: chance of detouring to a random spot before the next meal, and how many detours at most.
+$WANDER_P = 0.45; $MAX_WANDER = 3
 
 $PALETTES = @{
   light = @{ Bg = '#ffffff'; Empty = '#ebedf0'; Levels = '#9be9a8', '#40c463', '#30a14e', '#216e39'; Snake = '#d99a00' }
@@ -75,26 +81,142 @@ for ($day = $firstDay; $day -le $lastDay; $day = $day.AddDays(1)) {
   }
 }
 
-# ---- Snake path: enter at the top left, then down and up the weeks in date order, then leave right.
-$path = New-Object System.Collections.ArrayList
-[void]$path.Add(@(-2, 0)); [void]$path.Add(@(-1, 0))
-for ($c = 0; $c -lt $COLS; $c++) {
-  $rowSeq = 0..($ROWS - 1)
-  if ($c % 2 -eq 1) { $rowSeq = ($ROWS - 1)..0 }
-  foreach ($r in $rowSeq) { [void]$path.Add(@($c, $r)) }
+# ---- Snake path: a seeded random walk, so the route changes every day.
+# The snake drifts toward random spots or the nearest uneaten day, never reverses, does not bite
+# its own body, and avoids moves that would box it in. When everything is eaten it leaves
+# through the nearer side, far enough that even the grown tail is off the picture.
+if ($Seed -eq 0) { $Seed = [int]$lastDay.ToString('yyyyMMdd', $inv) }
+$rng = New-Object System.Random $Seed
+$dirs = @(@(1, 0), @(0, 1), @(-1, 0), @(0, -1))
+
+function Get-Reach([int]$FromC, [int]$FromR, $Occ, [int]$CMin, [int]$CMax, [int]$Cap) {
+  # Counts free cells reachable from a square, stopping once it has seen $Cap of them.
+  $seen = @{ "$FromC,$FromR" = $true }
+  $queue = New-Object System.Collections.Queue
+  $queue.Enqueue(@($FromC, $FromR))
+  while ($queue.Count -gt 0 -and $seen.Count -lt $Cap) {
+    $cur = $queue.Dequeue()
+    foreach ($dd in $dirs) {
+      $nc = $cur[0] + $dd[0]; $nr = $cur[1] + $dd[1]; $nk = "$nc,$nr"
+      if ($nr -lt 0 -or $nr -ge $ROWS -or $nc -lt $CMin -or $nc -gt $CMax) { continue }
+      if ($seen.ContainsKey($nk) -or $Occ.ContainsKey($nk)) { continue }
+      $seen[$nk] = $true
+      $queue.Enqueue(@($nc, $nr))
+    }
+  }
+  return $seen.Count
 }
+
+# Growth plan: new segment g appears when the snake eats its $growAt[g]-th day (0-based).
+$foodCount = $targets.Count
+$GROW = [Math]::Min($foodCount, $MAX_LEN - $START_LEN)
+$growAt = @(for ($g = 0; $g -lt $GROW; $g++) { [int][Math]::Ceiling(($g + 1) * $foodCount / $GROW) - 1 })
+if ($foodCount -gt 24) { $MAX_WANDER = 0 }   # plenty of food already makes it roam
+
+$startRow = $rng.Next(0, $ROWS)
+$path = New-Object System.Collections.ArrayList
+[void]$path.Add(@(-2, $startRow)); [void]$path.Add(@(-1, $startRow))
+$dir = 0
+$left = $targets.Clone()
 $order = New-Object System.Collections.ArrayList   # cell keys in the order they are eaten
 $eatStep = @{}
-for ($i = 0; $i -lt $path.Count; $i++) {
-  $key = "$($path[$i][0]),$($path[$i][1])"
-  if ($targets.ContainsKey($key) -and -not $eatStep.ContainsKey($key)) { $eatStep[$key] = $i; [void]$order.Add($key) }
+$len = $START_LEN
+$goal = $null; $goalIsFood = $false; $wanders = 0; $exiting = $false; $done = $false
+for ($guard = 0; $guard -lt 3000; $guard++) {
+  $head = $path[$path.Count - 1]
+  $hk = "$($head[0]),$($head[1])"
+  if ($left.ContainsKey($hk)) {
+    $left.Remove($hk); $eatStep[$hk] = $path.Count - 1; [void]$order.Add($hk)
+    $len = $START_LEN + @($growAt | Where-Object { $_ -lt $order.Count }).Count
+  }
+  $late = $path.Count -gt 260
+
+  if ($left.Count -eq 0) {
+    if (-not $exiting) {
+      $exiting = $true
+      $side = $COLS + $len + 1
+      if ($head[0] -lt $COLS / 2) { $side = -($len + 2) }
+      $goal = @($side, $head[1])
+    }
+    if ($head[0] -eq $goal[0]) { $done = $true; break }
+  } else {
+    $reached = $null -ne $goal -and $head[0] -eq $goal[0] -and $head[1] -eq $goal[1]
+    $stale = $goalIsFood -and -not $left.ContainsKey("$($goal[0]),$($goal[1])")
+    if ($null -eq $goal -or $reached -or $stale) {
+      if (-not $late -and $wanders -lt $MAX_WANDER -and $rng.NextDouble() -lt $WANDER_P) {
+        $goal = @($rng.Next(0, $COLS), $rng.Next(0, $ROWS)); $goalIsFood = $false; $wanders++
+      } else {
+        $best = [double]::MaxValue
+        foreach ($k in $left.Keys) {
+          $parts = $k.Split(','); $tc = [int]$parts[0]; $tr = [int]$parts[1]
+          $dist = [Math]::Abs($tc - $head[0]) + [Math]::Abs($tr - $head[1]) + $rng.NextDouble() * 0.9
+          if ($dist -lt $best) { $best = $dist; $goal = @($tc, $tr) }
+        }
+        $goalIsFood = $true
+      }
+    }
+  }
+
+  $cMin = -1; $cMax = $COLS
+  if ($exiting) { $cMin = -($len + 3); $cMax = $COLS + $len + 3 }
+  # Squares the body will still cover after this move (the tail moves out of the way),
+  # mapped to how many steps until each frees up.
+  $occ = @{}
+  for ($b = 1; $b -le $len - 1 -and $b -le $path.Count; $b++) {
+    $seg = $path[$path.Count - $b]; $occ["$($seg[0]),$($seg[1])"] = $len - $b
+  }
+  # Mostly heads for the goal, sometimes strays; stricter late in long walks and when leaving.
+  $beta = 1.1
+  if ($late) { $beta = 3 }
+  if ($exiting) { $beta = 4 }
+  $here = [Math]::Abs($goal[0] - $head[0]) + [Math]::Abs($goal[1] - $head[1])
+  $cands = New-Object System.Collections.ArrayList
+  $weights = New-Object System.Collections.ArrayList
+  $roomy = New-Object System.Collections.ArrayList
+  $bestReach = -1; $bestReachMove = -1
+  $soonest = [int]::MaxValue; $soonestMove = -1
+  for ($k = 0; $k -lt 4; $k++) {
+    if ($k -eq (($dir + 2) % 4)) { continue }
+    $nc = $head[0] + $dirs[$k][0]; $nr = $head[1] + $dirs[$k][1]
+    if ($nr -lt 0 -or $nr -ge $ROWS -or $nc -lt $cMin -or $nc -gt $cMax) { continue }
+    if ($occ.ContainsKey("$nc,$nr")) {
+      if ($occ["$nc,$nr"] -lt $soonest) { $soonest = $occ["$nc,$nr"]; $soonestMove = $k }
+      continue
+    }
+    $dist = [Math]::Abs($goal[0] - $nc) + [Math]::Abs($goal[1] - $nr)
+    $wt = [Math]::Exp(-$beta * ($dist - $here))
+    if ($k -eq $dir) { $wt *= 1.6 }
+    $reach = Get-Reach $nc $nr $occ $cMin $cMax ($len + 2)
+    if ($reach -gt $bestReach) { $bestReach = $reach; $bestReachMove = $k }
+    [void]$cands.Add($k); [void]$weights.Add($wt); [void]$roomy.Add($reach -ge $len)
+  }
+  # Random choice only among moves that leave room for the whole body; otherwise take the
+  # roomiest move, and only touch the body (at the segment about to leave) if there is nothing else.
+  for ($q = $cands.Count - 1; $q -ge 0; $q--) {
+    if (-not $roomy[$q]) { $cands.RemoveAt($q); $weights.RemoveAt($q) }
+  }
+  if ($cands.Count -eq 0) {
+    if ($bestReachMove -ge 0) { $pick = $bestReachMove }
+    elseif ($soonestMove -ge 0) { $pick = $soonestMove }
+    else { throw "The snake got stuck at $hk." }
+  } else {
+    $sum = 0.0
+    foreach ($wt in $weights) { $sum += $wt }
+    $roll = $rng.NextDouble() * $sum
+    $pick = $cands[$cands.Count - 1]
+    for ($q = 0; $q -lt $cands.Count; $q++) {
+      $roll -= $weights[$q]
+      if ($roll -le 0) { $pick = $cands[$q]; break }
+    }
+  }
+  $dir = $pick
+  [void]$path.Add(@(($head[0] + $dirs[$dir][0]), ($head[1] + $dirs[$dir][1])))
 }
-# Leave far enough to the right that even the grown tail is off the picture.
-$FINAL_LEN = $START_LEN + $order.Count
-$exitRow = $path[$path.Count - 1][1]
-for ($x = $COLS; $x -le $COLS + $FINAL_LEN + 1; $x++) { [void]$path.Add(@($x, $exitRow)) }
+if (-not $done) { throw 'The snake path did not finish.' }
+$FINAL_LEN = $START_LEN + $GROW
 
 $STEPS = $path.Count - 1
+$STEP = [Math]::Min($STEP, $MAX_WALK / $STEPS)
 $LOOP = $START_HOLD + $STEPS * $STEP + $END_HOLD
 $total = 0
 foreach ($k in $order) { $total += $targets[$k][1] }
@@ -196,7 +318,7 @@ function Build-Snake([string]$ThemeName) {
   }
 
   # Snake: every segment replays the head's path a few steps later. Tail first so the head draws on top.
-  # Segments past the starting length stay hidden until their day is eaten, so the snake grows at the tail.
+  # Segments past the starting length stay hidden until their growth day is eaten, so the snake grows at the tail.
   A '<g class="snake">'
   for ($k = $FINAL_LEN - 1; $k -ge 0; $k--) {
     $sz = [Math]::Max(6, 12 - 0.35 * $k)
@@ -205,7 +327,7 @@ function Build-Snake([string]$ThemeName) {
     if ($k -gt 0) { $delay = $k * $STEP - $LOOP }
     $anim = 'animation-delay:' + (N $delay) + 's'
     if ($k -ge $START_LEN) {
-      $anim = 'animation:mv ' + $loopS + ' linear ' + (N $delay) + 's infinite both,b' + ($k - $START_LEN) + ' ' + $loopS + ' steps(1,end) 0s infinite both'
+      $anim = 'animation:mv ' + $loopS + ' linear ' + (N $delay) + 's infinite both,b' + $growAt[$k - $START_LEN] + ' ' + $loopS + ' steps(1,end) 0s infinite both'
     }
     A ('<rect class="s" style="' + $anim + '" x="' + (N $off) + '" y="' + (N $off) + '" width="' + (N $sz) + '" height="' + (N $sz) + '" rx="' + (N ($sz * 0.3)) + '" fill="' + $pal.Snake + '"/>')
   }
@@ -225,6 +347,6 @@ function Build-Snake([string]$ThemeName) {
   return $sb.ToString()
 }
 
-"$User, $($firstDay.ToString('yyyy-MM-dd', $inv)) .. $lastKey, $($order.Count) active days, $total contributions, $STEPS steps, loop $(N $LOOP)s"
+"$User, $($firstDay.ToString('yyyy-MM-dd', $inv)) .. $lastKey, $($order.Count) active days, $total contributions, seed $Seed, $STEPS steps, loop $(N $LOOP)s"
 Save-Svg $Out (Build-Snake 'light')
 Save-Svg $DarkOut (Build-Snake 'dark')
