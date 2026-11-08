@@ -114,7 +114,9 @@ foreach ($s in $stops) {
 # Without an explicit 100% the cursor would fall back to the top-left corner once the animation ends.
 $end = $stops[$stops.Count - 1]
 A ('100%{transform:translate(' + (N $end[1]) + 'px,' + (N ($end[2] - $FS * 0.9)) + 'px)}}')
-A '.blink{animation:blink 1s steps(2,jump-none) infinite}@keyframes blink{0%{opacity:1}100%{opacity:.2}}'
+# A smooth, never-ending fade keeps the image's animation clock ticking every frame, like the hero and snake,
+# so browsers that only wake the image up for running animations keep printing the delayed lines.
+A '.blink{animation:blink .9s ease-in-out infinite alternate}@keyframes blink{from{opacity:1}to{opacity:.15}}'
 A '@media (prefers-reduced-motion:reduce){*{animation:none!important}.cur{display:none}}'
 A '</style>'
 A ('<defs><filter id="glow" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feComponentTransfer in="b" result="g"><feFuncA type="linear" slope="' + $TH.GlowSlope + '"/></feComponentTransfer><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>')
